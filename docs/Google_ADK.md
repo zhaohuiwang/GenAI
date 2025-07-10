@@ -1,17 +1,13 @@
 
 
-## Command
-```bash
-$ uv run python -m google.adk.cli web
-```
-
+## Directory 
 ```bash
 src
  └── agentName # Same Directory where the command was executed, also show on UI
      ├── .env
      ├── __init__.py
      ├── agent.py # default file name defining the agent's logic. Must also contain a root_agent variable
-     └── tools.py
+     └── tools.py # optional, with all user defined tool functions
 ```
 ## Google Agent Development Kit (ADK)
 `google.adk.cli` module (part of the `google-adk` package) is the command-line interface (CLI) entry point for the Google ADK, a framework for building, evaluating, and deploying AI agents. 
@@ -51,6 +47,7 @@ The Google ADK is an open-source, modular framework for developing and deploying
 - Create a project directory with an agent folder (e.g., multi_tool_agent/)
 - Define an `agent.py` file with a root_agent, such as
 ```python
+# The LlmAgent (often aliased simply as Agent)
 from google.adk.agents import Agent
 from google.adk.tools import google_search
 
@@ -62,6 +59,22 @@ root_agent = Agent(
     tools=[google_search]
 )
 ```
+- `name` (Required): A unique string identifier for the agent
+- `model` (Required): Specify the underlying LLM that will power this agent's reasoning.
+- `instruction` parameter is arguably the most critical for shaping an LlmAgent's behavior. It's a string (or a function returning a string) that tells the agent:
+    - Its core task or goal.
+    - Its personality or persona (e.g., "You are a helpful assistant," "You are a witty pirate").
+    - Constraints on its behavior (e.g., "Only answer questions about X," "Never reveal Y").
+    - How and when to use its tools. You should explain the purpose of each tool and the circumstances under which it should be called, supplementing any descriptions within the tool itself.
+    - The desired format for its output (e.g., "Respond in JSON," "Provide a bulleted list").
+
+    The instruction is a string template, you can use the {var} syntax to insert dynamic values into the instruction. {var} is used to insert the value of the state variable named var. {artifact.var} is used to insert the text content of the artifact named var. If the state variable or artifact does not exist, the agent will raise an error. If you want to ignore the error, you can append a ? to the variable name as in {var?}.
+- `description` (Optional, Recommended for Multi-Agent): Provide a concise summary of the agent's capabilities. This description is primarily used by other LLM agents to determine if they should route a task to this agent. Make it specific enough to differentiate it from peers.
+
+- `tools` (Optional): Provide a list of tools the agent can use. Tools give your LlmAgent capabilities beyond the LLM's built-in knowledge or reasoning. They allow the agent to interact with the outside world, perform calculations, fetch real-time data, or execute specific actions.
+
+- Advanced Configuration & Control  (`generate_content_config`, `input_schema`, `output_schema`, `output_key`, `include_contents`)
+
 #### 2. Create a `.env` file with Google Cloud credentials or API keys
 #### 3. Install Dependencies
 ```bash
