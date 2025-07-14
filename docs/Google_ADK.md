@@ -4,9 +4,9 @@
 ```bash
 src
  └── agentName # Same Directory where the command was executed, also show on UI
-     ├── .env
+     ├── .env # Stores all environment virables for your agents
      ├── __init__.py
-     ├── agent.py # default file name defining the agent's logic. Must also contain a root_agent variable
+     ├── agent.py # defining the agent's logic (default name is agent.py). Must also contain a root_agent variable as an entry point, also its name must match the directory name(not necessary anymore for newer versions). 
      └── tools.py # optional, with all user defined tool functions
 ```
 ## Google Agent Development Kit (ADK)
@@ -29,6 +29,7 @@ The Google ADK is an open-source, modular framework for developing and deploying
     * The agent's logic must be defined in an `agent.py` file within an agent directory (e.g., `multi_tool_agent/`), with a `root_agent` variable specifying the agent's properties (name, model, tools, instructions)
     * A .env file in the agent directory should contain necessary configurations (authentication), such as:
     ```bash
+    # you do not have to put the value inside quotation marks unless it contains special characters
     GOOGLE_GENAI_USE_VERTEXAI=TRUE
     GOOGLE_API_KEY=your-api-key
     GOOGLE_CLOUD_PROJECT=your-project-id    # default if not specified
@@ -44,19 +45,29 @@ The Google ADK is an open-source, modular framework for developing and deploying
 ## Example Workflow
 
 #### 1. Set up the Project:
-- Create a project directory with an agent folder (e.g., multi_tool_agent/)
+- Create a project directory with an agent folder (e.g., search_assistant/)
 - Define an `agent.py` file with a root_agent, such as
 ```python
+from datetime import datatime
 # The LlmAgent (often aliased simply as Agent)
 from google.adk.agents import Agent
 from google.adk.tools import google_search
+
+# Suggest to save function tools in a seperate script file like tools.py
+def get_current_time() -> Dict:
+    """Get the current time in the format YYYY_MM_DD HH:MM:SS"""
+    return {"Current_time": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}
+    # adk by default wrap the return into json/dictionary, e.g. {"Result": "2025-07-11 00:00:00"}. So we want to specify it is the current time to be helpful as possible to the agent.
+    # Also note that parameters with default values do not working at the present time.
 
 root_agent = Agent(
     name="search_assistant",
     model="gemini-2.0-flash",
     instruction="You are a helpful assistant. Answer user questions using Google Search when needed.",
     description="An assistant that can search the web.",
-    tools=[google_search]
+    tools=[google_search],
+    # can only use one Built-in tool at a time, not a combination of Build-in tool and Funciton tool
+    sub_agents=[],
 )
 ```
 - `name` (Required): A unique string identifier for the agent
@@ -72,8 +83,12 @@ root_agent = Agent(
 - `description` (Optional, Recommended for Multi-Agent): Provide a concise summary of the agent's capabilities. This description is primarily used by other LLM agents to determine if they should route a task to this agent. Make it specific enough to differentiate it from peers.
 
 - `tools` (Optional): Provide a list of tools the agent can use. Tools give your LlmAgent capabilities beyond the LLM's built-in knowledge or reasoning. They allow the agent to interact with the outside world, perform calculations, fetch real-time data, or execute specific actions.
+- `sub_agents` (Optional): Specialized agents under the root agent, each with their own tools, instructions, and scopes. They handle specific tasks (e.g., querying BigQuery) and can share context with the root agent.
 
 - Advanced Configuration & Control  (`generate_content_config`, `input_schema`, `output_schema`, `output_key`, `include_contents`)
+- `input_schema` (Optional): Define a schema representing the expected input structure. It is kind of stringent or rigid and prone to fail so use it wisely. 
+- `output_schema` (Optional): Define a schema representing the desired output structure.
+- `output_key` (Optional): Provide a string key. The text content of the agent's final response will be automatically saved to the session's state dictionary under this key. This is useful for passing results between agents or steps in a workflow.
 
 #### 2. Create a `.env` file with Google Cloud credentials or API keys
 #### 3. Install Dependencies
@@ -92,6 +107,10 @@ uv run python -m google.adk.cli web
 uv run python -m google.adk.cli run <agent_name>
 # To start the API server for the web UI
 uv run python -m google.adk.cli api_server --allow_origins=http://localhost:4200 --host=0.0.0.0
+
+# or if the virtual environment is activated, you can simply the command like
+adk     # list all options
+adk web 
 ```
 #### 5. Access the UI
 - Open http://localhost:8000 in a browser.
@@ -101,6 +120,9 @@ uv run python -m google.adk.cli api_server --allow_origins=http://localhost:4200
 #### 6. Stop the Server
 - Press `Ctrl+c` in the terminal to stop the web server.
 
+
+## Tools
+There are three types of tools in ADK: Function tools, Built-in tools (by Google and only works for Gemini models as of 07/2025) and Thrid-party tools.
 
 ## Rferences
 
