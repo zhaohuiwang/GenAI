@@ -2,12 +2,19 @@
 
 ## Directory 
 ```bash
-src
- └── agentName # Same Directory where the command was executed, also show on UI
-     ├── .env # Stores all environment virables for your agents
+    ├── .env    # Stores all environment virables for your agents
+    ├── .venv
+    ├── README.md
+    ├── poetry.lock
+    ├── pyproject.toml
+    └── agentName # can be multiple levels hierarchy. Also shown on UI
      ├── __init__.py
-     ├── agent.py # defining the agent's logic (default name is agent.py). Must also contain a root_agent variable as an entry point, also its name must match the directory name(not necessary anymore for newer versions). 
-     └── tools.py # optional, with all user defined tool functions
+     ├── agent.py # defining the agent's logic (default name is agent.py). Must also contain a root_agent variable as an entry point, also its name must match the directory name(not necessary anymore for newer versions).
+     ├── prompts.py # optional
+     ├── tools.py   # optional, with all user defined tool functions
+     ├── sub_agents # optional, suggest to organize with agent.py, prompt.py and tools.py as the root agent.
+     └── utils      # optional,
+
 ```
 ## Google Agent Development Kit (ADK)
 `google.adk.cli` module (part of the `google-adk` package) is the command-line interface (CLI) entry point for the Google ADK, a framework for building, evaluating, and deploying AI agents. 
@@ -70,7 +77,7 @@ root_agent = Agent(
     sub_agents=[],
 )
 ```
-- `name` (Required): A unique string identifier for the agent
+- `name` (Required): A unique string identifier for the agent.
 - `model` (Required): Specify the underlying LLM that will power this agent's reasoning.
 - `instruction` parameter is arguably the most critical for shaping an LlmAgent's behavior. It's a string (or a function returning a string) that tells the agent:
     - Its core task or goal.
@@ -124,6 +131,6 @@ adk web
 ## Tools
 There are three types of tools in ADK: Function tools, Built-in tools (by Google and only works for Gemini models as of 07/2025) and Thrid-party tools.
 
-## Rferences
+## References
 
 [Google Agent Development Kit](https://google.github.io/adk-docs/)
